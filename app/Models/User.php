@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'employeeid'
     ];
 
     /**
@@ -40,6 +41,15 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
+
+    protected $with = ['hpersonal'];
+    public function hpersonal()
+    {
+        return $this->belongsTo(
+            Hpersonal::class,
+            'employeeid',
+            'employeeid'
+        );
+    }
 }

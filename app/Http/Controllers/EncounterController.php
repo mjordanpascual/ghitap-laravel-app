@@ -10,9 +10,8 @@ class EncounterController extends Controller
     public function index(Request $request)
     {
         $per_page = $request->input('per_page') ?? 10;
-        $attributes = $request->except(['per_page', 'page', 'date']);
+        $attributes = $request->except(['per_page', 'page', 'date', 'hospital_number']);
 
-        // YYYY-MM-DD
         $date = $request->input('date') ?? date('Y-m-d');
 
         $encounters = DB::table('encounters')
@@ -24,14 +23,12 @@ class EncounterController extends Controller
                 'departments.name as department_name'
             )
             ->where($attributes)
-
-            ->where(DB::raw('cast(timestamp as date)'), $date)
-
             ->where(function ($query) use ($request, $date) {
                 if($request->has('hospital_number')) {
                     $query->where('encounters.hospital_number', $request->input('hospital_number'));
                 } else {
-                    $query->where(DB::raw('cast(timestamp as date)'), $date);
+                    // $query->where(DB::raw('cast(timestamp as date)'), $date);
+                    $query->whereDate('timestamp', $date);
                 }
             })
             ->paginate($per_page);
@@ -44,7 +41,12 @@ class EncounterController extends Controller
         $request->validate([
             'hospital_number' => 'required|exists:patients,hospital_number',
             'department_code' => 'required|exists:departments,code',
-            'type' => 'nullable|in:R,T'
+            'type' => 'nullable|in:R,T',
+
+            // 'hospital_number' => [
+            //     'required',
+            //     'exists:patients,hospital_number',
+            // ]
         ]);
 
         $id = DB::table('encounters')->insertGetId([
@@ -59,17 +61,4 @@ class EncounterController extends Controller
             'data' => $id,
         ], 201);
     }
-
-
-
-    // public function index()
-    // {
-    //     return response()->json([]);
-    // }
-
-    // public function store()
-    // {
-    //     return response()->json(null, 201);
-
-    // }
 }
